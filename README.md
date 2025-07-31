@@ -1,6 +1,6 @@
 # 🚀 MorphPay - Universal Multichain USDC Payment Gateway
 
-> **Winner-Ready Hackathon Project for Circle's USDC Challenge**
+> **Hackathon Project for Circle's 2025 USDC Challenge**
 
 MorphPay is a cutting-edge multichain USDC payment system that leverages Circle's CCTP V2 (Cross-Chain Transfer Protocol) to enable lightning-fast, secure payments across multiple blockchains. Built with Fast Transfers, Smart Hooks, and an intuitive UI, MorphPay represents the future of multichain finance.
 
