@@ -4,7 +4,7 @@
 
 MorphPay is a cutting-edge multichain USDC payment system that leverages Circle's CCTP V2 (Cross-Chain Transfer Protocol) to enable lightning-fast, secure payments across multiple blockchains. Built with Fast Transfers, Smart Hooks, and an intuitive UI, MorphPay represents the future of multichain finance.
 
-![MorphPay Logo](./assets/morphpay-icon.svg)
+![MorphPay Logo](./public/morphpay-icon.svg)
 
 ## 🌟 Key Features
 
