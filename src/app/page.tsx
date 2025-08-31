@@ -152,24 +152,6 @@ export default function Home() {
             {/* Sidebar */}
             <div className="space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Volume</span>
-                    <span className="font-semibold">$1,234,567</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Transactions</span>
-                    <span className="font-semibold">1,234</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Active Chains</span>
-                    <span className="font-semibold">7</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-semibold mb-4">Supported Chains</h3>
                 <div className="space-y-2">
                   {['Ethereum', 'Arbitrum', 'Base', 'Avalanche', 'Sonic'].map((chain) => (
@@ -190,7 +172,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
             <p>Powered by Circle • Built for the multichain future</p>
-            <p>*Built with ❤️ for Circle&apos;s USDC Hackathon*</p>
+            <p>Built with ❤️ for Circle Developer Bounties 2025</p>
           </div>
         </div>
       </footer>

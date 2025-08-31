@@ -48,33 +48,42 @@ const getArrayEnvVar = (key: string, defaultValue: string[] = []): number[] => {
   return value.split(',').map(item => parseInt(item.trim(), 10)).filter(Boolean);
 };
 
-export const config: AppConfig = {
-  environment: (process.env.NODE_ENV as AppConfig['environment']) || 'development',
-  walletConnectProjectId: getEnvVar('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', '49dc316aaabcb2da454c399bf59fc1dd'),
-  cctpEnvironment: (getEnvVar('NEXT_PUBLIC_CCTP_ENVIRONMENT', 'testnet') as AppConfig['cctpEnvironment']),
-  circleApiKey: getEnvVar('NEXT_PUBLIC_CIRCLE_API_KEY'),
-  supportedChains: getArrayEnvVar('NEXT_PUBLIC_SUPPORTED_CHAINS', ['1', '42161', '8453', '43114', '146']),
-  appUrl: getEnvVar('NEXT_PUBLIC_APP_URL', 'http://localhost:3000'),
-  apiUrl: getEnvVar('NEXT_PUBLIC_API_URL', 'http://localhost:3000/api'),
-  features: {
-    enableTestnet: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_TESTNET', true),
-    enableHooks: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_HOOKS', true),
-    enableFastTransfer: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_FAST_TRANSFER', true),
-  },
-  rpcUrls: {
-    ethereum: getEnvVar('NEXT_PUBLIC_ETHEREUM_RPC_URL', 'https://eth.llamarpc.com'),
-    arbitrum: getEnvVar('NEXT_PUBLIC_ARBITRUM_RPC_URL', 'https://arbitrum.llamarpc.com'),
-    base: getEnvVar('NEXT_PUBLIC_BASE_RPC_URL', 'https://base.llamarpc.com'),
-    avalanche: getEnvVar('NEXT_PUBLIC_AVALANCHE_RPC_URL', 'https://avalanche.llamarpc.com'),
-    sonic: getEnvVar('NEXT_PUBLIC_SONIC_RPC_URL', 'https://rpc.soniclabs.com'),
-  },
-  analytics: {
-    id: getEnvVar('NEXT_PUBLIC_ANALYTICS_ID'),
-  },
-  monitoring: {
-    sentryDsn: getEnvVar('NEXT_PUBLIC_SENTRY_DSN'),
-  },
+const createConfig = (): AppConfig => {
+  // Debug environment variables
+  console.log('Environment Variables Debug:');
+  console.log('NEXT_PUBLIC_ETHEREUM_RPC_URL:', process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL);
+  console.log('NEXT_PUBLIC_CCTP_ENVIRONMENT:', process.env.NEXT_PUBLIC_CCTP_ENVIRONMENT);
+
+  return {
+    environment: (process.env.NODE_ENV as AppConfig['environment']) || 'development',
+    walletConnectProjectId: getEnvVar('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', '49dc316aaabcb2da454c399bf59fc1dd'),
+    cctpEnvironment: (getEnvVar('NEXT_PUBLIC_CCTP_ENVIRONMENT', 'testnet') as AppConfig['cctpEnvironment']),
+    circleApiKey: getEnvVar('NEXT_PUBLIC_CIRCLE_API_KEY'),
+    supportedChains: getArrayEnvVar('NEXT_PUBLIC_SUPPORTED_CHAINS', ['1', '42161', '8453', '43114', '146']),
+    appUrl: getEnvVar('NEXT_PUBLIC_APP_URL', 'http://localhost:3000'),
+    apiUrl: getEnvVar('NEXT_PUBLIC_API_URL', 'http://localhost:3000/api'),
+    features: {
+      enableTestnet: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_TESTNET', true),
+      enableHooks: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_HOOKS', true),
+      enableFastTransfer: getBooleanEnvVar('NEXT_PUBLIC_ENABLE_FAST_TRANSFER', true),
+    },
+    rpcUrls: {
+      ethereum: getEnvVar('NEXT_PUBLIC_ETHEREUM_RPC_URL', 'https://eth.llamarpc.com'),
+      arbitrum: getEnvVar('NEXT_PUBLIC_ARBITRUM_RPC_URL', 'https://arbitrum.llamarpc.com'),
+      base: getEnvVar('NEXT_PUBLIC_BASE_RPC_URL', 'https://base.llamarpc.com'),
+      avalanche: getEnvVar('NEXT_PUBLIC_AVALANCHE_RPC_URL', 'https://avalanche.llamarpc.com'),
+      sonic: getEnvVar('NEXT_PUBLIC_SONIC_RPC_URL', 'https://rpc.soniclabs.com'),
+    },
+    analytics: {
+      id: getEnvVar('NEXT_PUBLIC_ANALYTICS_ID'),
+    },
+    monitoring: {
+      sentryDsn: getEnvVar('NEXT_PUBLIC_SENTRY_DSN'),
+    },
+  };
 };
+
+export const config = createConfig();
 
 // Validation
 export const validateConfig = (): { isValid: boolean; errors: string[] } => {

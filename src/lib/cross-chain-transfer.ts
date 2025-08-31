@@ -70,6 +70,7 @@ export class CrossChainTransferService {
           gasLimit: options?.useFastTransfer ? 300000 : 250000
         };
 
+        console.log('CrossChainTransferService - recipientAddress:', recipientAddress);
         burnResult = await this.cctp.initiateBurn(
           sourceChain,
           destinationChain,
@@ -91,7 +92,7 @@ export class CrossChainTransferService {
       // Step 2: Wait for attestation
       const attestation = await this.waitForAttestationWithProgress(
         burnResult.messageHash,
-        options?.useFastTransfer ? 30000 : 1200000, // 30s for fast, 20min for standard
+        options?.useFastTransfer ? 60000 : 1800000, // 1min for fast, 30min for standard (testnet is slower)
         (progressPercent) => {
           onProgress({
             step: 'WAITING_ATTESTATION',
@@ -100,7 +101,9 @@ export class CrossChainTransferService {
             progress: 30 + (progressPercent * 0.4), // 30-70%
             timeElapsed: Date.now() - startTime
           });
-        }
+        },
+        burnResult.sourceDomain,
+        burnResult.txHash
       );
 
       onProgress({
@@ -271,19 +274,25 @@ export class CrossChainTransferService {
   private async waitForAttestationWithProgress(
     messageHash: string,
     maxWaitTime: number,
-    onProgress: (progressPercent: number) => void
+    onProgress: (progressPercent: number) => void,
+    sourceDomain?: number,
+    transactionHash?: string
   ): Promise<string> {
     const startTime = Date.now();
     const checkInterval = 5000; // Check every 5 seconds
     
     while (Date.now() - startTime < maxWaitTime) {
       try {
-        const attestation = await this.cctp.getAttestation(messageHash);
+        const attestation = await this.cctp.getAttestation(messageHash, sourceDomain, transactionHash);
         if (attestation) {
+          console.log('Attestation retrieved successfully:', attestation);
           onProgress(100);
           return attestation;
+        } else {
+          console.log('Attestation not ready yet, continuing to wait...');
         }
       } catch (error) {
+        console.log('Attestation API error, continuing to wait...', error);
         // Attestation not ready yet, continue waiting
       }
       

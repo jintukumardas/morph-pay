@@ -14,10 +14,10 @@ export function PaymentForm() {
   const { switchChain } = useSwitchChain();
   const [formData, setFormData] = useState({
     sourceChain: 'ethereum',
-    destinationChain: 'base',
+    destinationChain: 'avalanche', // Try Avalanche Fuji (domain 1) first
     amount: '',
     recipient: '',
-    useFastTransfer: true,
+    useFastTransfer: false, // Try standard transfer first
     enableHooks: false,
     hookType: 'REBALANCE' as HookMetadata['hookType'],
     rebalanceTarget: 'avalanche',
@@ -175,6 +175,9 @@ export function PaymentForm() {
         }
       };
 
+      console.log('PaymentForm - formData.recipient:', formData.recipient);
+      console.log('PaymentForm - full formData:', formData);
+      
       const result = await crossChainService.initiateTransfer(
         formData.sourceChain,
         formData.destinationChain,
