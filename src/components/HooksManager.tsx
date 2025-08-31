@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { MerchantHookManager, MerchantHookConfig } from '@/lib/hooks';
-import { Settings, Webhook, ArrowRightLeft, Repeat, Zap, Plus, Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MerchantHookConfig } from '@/lib/hooks';
+import { Settings, Webhook, ArrowRightLeft, Repeat, Zap, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function HooksManager() {
@@ -15,6 +15,14 @@ export function HooksManager() {
     autoSwapToken: '',
     customHookContract: '',
   });
+
+  useEffect(() => {
+    // Load existing configurations from localStorage
+    const stored = localStorage.getItem('morphpay-hooks');
+    if (stored) {
+      setConfigs(JSON.parse(stored));
+    }
+  }, []);
 
   const handleSaveConfig = () => {
     if (!newConfig.merchantId) {
@@ -102,7 +110,7 @@ export function HooksManager() {
         ].map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id as any)}
+            onClick={() => setActiveTab(id as 'existing' | 'create')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeTab === id
                 ? 'bg-purple-600 text-white'

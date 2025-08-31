@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ExternalLink, Clock, CheckCircle, AlertCircle, Zap } from 'lucide-react';
-import { SUPPORTED_CHAINS } from '@/lib/cctp';
+import { ExternalLink, Clock, CheckCircle, AlertCircle, Zap, RefreshCw } from 'lucide-react';
+import { SUPPORTED_CHAINS, CCTPService } from '@/lib/cctp';
+import toast from 'react-hot-toast';
 
 interface Transaction {
   id: string;
@@ -13,19 +14,166 @@ interface Transaction {
   recipient: string;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  useFastTransfer?: boolean;
+  enableHooks?: boolean;
   hookId?: string;
+  attestation?: string;
+  mintTxHash?: string;
+  lastChecked?: number;
 }
 
 export function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'failed'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
+  const loadTransactions = () => {
     const stored = localStorage.getItem('morphpay-transactions');
     if (stored) {
       setTransactions(JSON.parse(stored));
     }
+  };
+
+  const saveTransactions = (updatedTransactions: Transaction[]) => {
+    localStorage.setItem('morphpay-transactions', JSON.stringify(updatedTransactions));
+    setTransactions(updatedTransactions);
+  };
+
+  const checkTransactionStatus = async (tx: Transaction): Promise<Transaction> => {
+    try {
+      const cctpService = new CCTPService();
+      
+      // Don't check if already completed or failed, or if checked recently
+      const now = Date.now();
+      if (tx.status !== 'PENDING' || (tx.lastChecked && now - tx.lastChecked < 30000)) {
+        return tx;
+      }
+
+      // Try to get attestation
+      if (!tx.attestation) {
+        try {
+          const attestation = await cctpService.getAttestation(tx.messageHash);
+          if (attestation) {
+            return {
+              ...tx,
+              attestation,
+              status: 'COMPLETED',
+              lastChecked: now
+            };
+          }
+        } catch (error) {
+          console.log(`Attestation not ready for ${tx.id}`);
+        }
+      }
+
+      // For fast transfers, check if sufficient time has passed
+      if (tx.useFastTransfer && now - tx.timestamp > 60000) { // 1 minute for fast transfer
+        try {
+          const attestation = await cctpService.getAttestation(tx.messageHash);
+          if (attestation) {
+            return {
+              ...tx,
+              attestation,
+              status: 'COMPLETED',
+              lastChecked: now
+            };
+          }
+        } catch (error) {
+          // If fast transfer hasn't completed after reasonable time, it might have failed
+          if (now - tx.timestamp > 300000) { // 5 minutes
+            return {
+              ...tx,
+              status: 'FAILED',
+              lastChecked: now
+            };
+          }
+        }
+      }
+
+      // For standard transfers, check after finality time
+      if (!tx.useFastTransfer && now - tx.timestamp > 900000) { // 15 minutes for standard transfer
+        try {
+          const attestation = await cctpService.getAttestation(tx.messageHash);
+          if (attestation) {
+            return {
+              ...tx,
+              attestation,
+              status: 'COMPLETED',
+              lastChecked: now
+            };
+          } else if (now - tx.timestamp > 1800000) { // 30 minutes, likely failed
+            return {
+              ...tx,
+              status: 'FAILED',
+              lastChecked: now
+            };
+          }
+        } catch (error) {
+          console.log(`Standard transfer not ready for ${tx.id}`);
+        }
+      }
+
+      return {
+        ...tx,
+        lastChecked: now
+      };
+    } catch (error) {
+      console.error(`Error checking transaction ${tx.id}:`, error);
+      return {
+        ...tx,
+        lastChecked: Date.now()
+      };
+    }
+  };
+
+  const refreshTransactions = async () => {
+    setIsRefreshing(true);
+    try {
+      const pendingTransactions = transactions.filter(tx => tx.status === 'PENDING');
+      
+      if (pendingTransactions.length === 0) {
+        setIsRefreshing(false);
+        return;
+      }
+
+      const updatedTransactions = await Promise.all(
+        transactions.map(tx => checkTransactionStatus(tx))
+      );
+
+      const hasUpdates = JSON.stringify(updatedTransactions) !== JSON.stringify(transactions);
+      if (hasUpdates) {
+        saveTransactions(updatedTransactions);
+        const newlyCompleted = updatedTransactions.filter(
+          (tx, idx) => tx.status === 'COMPLETED' && transactions[idx]?.status === 'PENDING'
+        );
+        
+        newlyCompleted.forEach(tx => {
+          toast.success(`Transfer to ${SUPPORTED_CHAINS[tx.destinationChain]?.name} completed!`);
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing transactions:', error);
+      toast.error('Failed to refresh transaction status');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
   }, []);
+
+  // Auto-refresh pending transactions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const hasPending = transactions.some(tx => tx.status === 'PENDING');
+      if (hasPending) {
+        refreshTransactions();
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [transactions]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (filter === 'all') return true;
@@ -57,7 +205,18 @@ export function TransactionHistory() {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Transaction History</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-gray-900">Transaction History</h2>
+          <button
+            onClick={refreshTransactions}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            title="Refresh transaction status"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Checking...' : 'Refresh'}
+          </button>
+        </div>
         
         {/* Filter buttons */}
         <div className="flex gap-2">
@@ -72,6 +231,11 @@ export function TransactionHistory() {
               }`}
             >
               {filterType}
+              {filterType === 'pending' && transactions.filter(tx => tx.status === 'PENDING').length > 0 && (
+                <span className="ml-1 bg-yellow-500 text-white rounded-full px-1.5 py-0.5 text-xs">
+                  {transactions.filter(tx => tx.status === 'PENDING').length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -109,6 +273,13 @@ export function TransactionHistory() {
                         {SUPPORTED_CHAINS[tx.destinationChain]?.name}
                       </span>
                     </div>
+                    
+                    {tx.useFastTransfer && (
+                      <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                        <Zap className="w-3 h-3" />
+                        Fast
+                      </div>
+                    )}
                     
                     {tx.hookId && (
                       <div className="flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">

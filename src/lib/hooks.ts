@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { CCTPService } from './cctp';
+import { CCTPService, TransferOptions } from './cctp';
 
 export interface HookMetadata {
   hookType: 'REBALANCE' | 'NOTIFICATION' | 'SWAP' | 'CUSTOM';
@@ -21,6 +21,13 @@ export class CCTPHooksService extends CCTPService {
     // Encode hook metadata
     const encodedHooks = this.encodeHookMetadata(hookMetadata);
     
+    // Create transfer options with hooks
+    const options: TransferOptions = {
+      hooks: encodedHooks,
+      useFastTransfer: false, // Hooks may not be compatible with fast transfer
+      gasLimit: hookMetadata.gasLimit || 500000
+    };
+    
     // Call parent burn function with hooks
     const result = await this.initiateBurn(
       sourceChain,
@@ -28,7 +35,7 @@ export class CCTPHooksService extends CCTPService {
       amount,
       recipientAddress,
       signer,
-      encodedHooks
+      options
     );
 
     // Generate hook ID for tracking

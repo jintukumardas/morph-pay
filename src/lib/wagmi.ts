@@ -5,6 +5,7 @@ import {
   mainnet,
   avalanche,
 } from 'wagmi/chains';
+import config from './config';
 
 // Define Sonic chain (not in wagmi/chains yet)
 const sonic = {
@@ -25,9 +26,11 @@ const sonic = {
   },
 } as const;
 
-export const config = getDefaultConfig({
+export const wagmiConfig = getDefaultConfig({
   appName: 'MorphPay',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+  projectId: config.walletConnectProjectId,
   chains: [mainnet, arbitrum, base, avalanche, sonic],
   ssr: true,
 });
+
+export { wagmiConfig as config };
