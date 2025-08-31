@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
 import { CCTPHooksService, HookMetadata } from '@/lib/hooks';
@@ -32,9 +32,10 @@ export function PaymentForm() {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [transferProgress, setTransferProgress] = useState<TransferProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [currentTransferResult, setCurrentTransferResult] = useState<any>(null);
 
   // Check USDC balance and allowance
-  const checkBalanceAndAllowance = async () => {
+  const checkBalanceAndAllowance = useCallback(async () => {
     if (!address) return;
 
     setIsLoadingBalance(true);
@@ -58,10 +59,10 @@ export function PaymentForm() {
     } finally {
       setIsLoadingBalance(false);
     }
-  };
+  }, [address, formData.sourceChain, formData.amount]);
 
   // Check fees
-  const checkTransferFees = async () => {
+  const checkTransferFees = useCallback(async () => {
     try {
       const cctpService = new CCTPService();
       const fees = await cctpService.getTransferFees(formData.sourceChain, formData.destinationChain);
@@ -70,7 +71,7 @@ export function PaymentForm() {
       console.error('Failed to check transfer fees:', error);
       setTransferFees('0');
     }
-  };
+  }, [formData.sourceChain, formData.destinationChain]);
 
   // Handle network switching
   const ensureCorrectNetwork = async () => {
@@ -122,7 +123,7 @@ export function PaymentForm() {
       checkBalanceAndAllowance();
       checkTransferFees();
     }
-  }, [address, formData.sourceChain, formData.destinationChain, formData.amount]);
+  }, [address, checkBalanceAndAllowance, checkTransferFees]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +188,9 @@ export function PaymentForm() {
         transferOptions
       );
 
+      // Store the transfer result for completing the transfer
+      setCurrentTransferResult(result);
+
       if (result.status === 'ATTESTED') {
         if (formData.useFastTransfer) {
           toast.success('Fast payment initiated! Attestation received in seconds');
@@ -230,6 +234,71 @@ export function PaymentForm() {
         step: 'FAILED',
         message: error.message || 'Payment failed',
         progress: 0,
+        timeElapsed: 0
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle completing the transfer (minting)
+  const handleCompleteTransfer = async () => {
+    if (!currentTransferResult || !address) {
+      toast.error('No transfer to complete');
+      return;
+    }
+
+    // Switch to destination chain for minting
+    const destConfig = SUPPORTED_CHAINS[formData.destinationChain];
+    if (chainId !== destConfig.id) {
+      try {
+        await switchChain({ chainId: destConfig.id });
+      } catch (error) {
+        toast.error(`Please switch to ${destConfig.name} network`);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    const loadingToast = toast.loading('Completing transfer...');
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const crossChainService = new CrossChainTransferService();
+
+      const completedResult = await crossChainService.completeTransfer(
+        currentTransferResult,
+        formData.destinationChain,
+        signer,
+        (progress: TransferProgress) => {
+          setTransferProgress(progress);
+        }
+      );
+
+      toast.success('Transfer completed successfully!');
+      toast.dismiss(loadingToast);
+
+      // Update stored transaction
+      const existingTxs = JSON.parse(localStorage.getItem('morphpay-transactions') || '[]');
+      const updatedTxs = existingTxs.map((tx: any) => 
+        tx.id === currentTransferResult.sourceTransactionHash 
+          ? { ...tx, status: 'COMPLETED', destinationTransactionHash: completedResult.destinationTransactionHash }
+          : tx
+      );
+      localStorage.setItem('morphpay-transactions', JSON.stringify(updatedTxs));
+
+      // Clear current transfer
+      setCurrentTransferResult(null);
+
+    } catch (error: any) {
+      console.error('Complete transfer failed:', error);
+      toast.dismiss(loadingToast);
+      toast.error(error.message || 'Failed to complete transfer');
+      setTransferProgress({
+        step: 'FAILED',
+        message: error.message || 'Failed to complete transfer',
+        progress: 80,
         timeElapsed: 0
       });
     } finally {
@@ -569,8 +638,19 @@ export function PaymentForm() {
                   </button>
                 )}
                 {transferProgress.step === 'READY_TO_MINT' && (
-                  <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Complete Transfer
+                  <button 
+                    onClick={handleCompleteTransfer}
+                    disabled={isLoading}
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Completing...
+                      </>
+                    ) : (
+                      'Complete Transfer'
+                    )}
                   </button>
                 )}
                 {transferProgress.step !== 'COMPLETED' && transferProgress.step !== 'FAILED' && (

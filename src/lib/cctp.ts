@@ -25,9 +25,9 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     name: config.cctpEnvironment === 'testnet' ? 'Ethereum Sepolia' : 'Ethereum',
     rpcUrl: config.cctpEnvironment === 'testnet' ? 'https://ethereum-sepolia-rpc.publicnode.com' : config.rpcUrls.ethereum,
     domainId: 0,
-    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0xBd3fa81B58Ba92a82136038B25aDec7066af3155',
-    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x0a992d191DEeC32aFe36203Ad87D7d289a738F81',
-    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xc4922d64a24675E16e1586e3e3Aa56C06fABe907',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xfd78EE919681417d192449715b2594ab58f5D002',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' : '0xA0b86a33E75A9DB55553dAe29b73E98e82c0c6b5',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
@@ -38,9 +38,9 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     name: config.cctpEnvironment === 'testnet' ? 'Arbitrum Sepolia' : 'Arbitrum',
     rpcUrl: config.rpcUrls.arbitrum,
     domainId: 3,
-    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x19330d10D9Cc8751218eaf51E8885D058642E08A',
-    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0xC30362313FBBA5cf9163F0bb16a0e01f01A896ca',
-    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xE7Ed1fa7f45D05C508232aa32649D89b73b8bA48',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xfd78EE919681417d192449715b2594ab58f5D002',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' : '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
@@ -51,9 +51,9 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     name: config.cctpEnvironment === 'testnet' ? 'Base Sepolia' : 'Base',
     rpcUrl: config.rpcUrls.base,
     domainId: 6,
-    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x1682Ae6375C4E4A97e4B583BC394c861A46D8962',
-    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0xAD09780d193884d503182aD4588450C416D6F9D4',
-    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xc4922d64a24675E16e1586e3e3Aa56C06fABe907',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xfd78EE919681417d192449715b2594ab58f5D002',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x036CbD53842c5426634e7929541eC2318f3dCF7e' : '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
@@ -64,9 +64,9 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     name: config.cctpEnvironment === 'testnet' ? 'Avalanche Fuji' : 'Avalanche',
     rpcUrl: config.rpcUrls.avalanche,
     domainId: 1,
-    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x6B25532e1060CE10cc3B0A99e5683b91BFDe6982',
-    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x8186359aF5F57FbB40c6b14A588d2A59C0C29880',
-    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0x420f5035fd5dc62a167e7e7f08b604335ae272b8',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xfd78EE919681417d192449715b2594ab58f5D002',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x5425890298aed601595a70AB815c96711a31Bc65' : '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
@@ -75,12 +75,12 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
   sonic: {
     id: config.cctpEnvironment === 'testnet' ? 64165 : 146, // Sonic Testnet : Sonic
     name: config.cctpEnvironment === 'testnet' ? 'Sonic Testnet' : 'Sonic',
-    rpcUrl: config.rpcUrls.sonic,
-    domainId: 4,
+    rpcUrl: config.cctpEnvironment === 'testnet' ? 'https://rpc.testnet.soniclabs.com' : config.rpcUrls.sonic,
+    domainId: 13, // Correct domain ID for Sonic
     tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
     messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
     tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xb43db544E2c27092c107639Ad201b3dEfAbcF192' : '0xfd78EE919681417d192449715b2594ab58f5D002',
-    usdcAddress: config.cctpEnvironment === 'testnet' ? '0x5425890298aed601595a70AB815c96711a31Bc65' : '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+    usdcAddress: config.cctpEnvironment === 'testnet' ? '0xA4879Fed32Ecbef99399e5cbC247E533421C4eC6' : '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
     supportsFastTransfer: config.features.enableFastTransfer,
@@ -337,7 +337,7 @@ export class CCTPService {
             maxFee,
             minFinalityThreshold,
             {
-              gasLimit: estimatedGas * 120n / 100n // 20% buffer
+              gasLimit: estimatedGas * BigInt(120) / BigInt(100) // 20% buffer
             }
           );
         } catch (gasError: any) {
@@ -372,7 +372,7 @@ export class CCTPService {
     }
   }
 
-  async getAttestation(messageHash: string, sourceDomain?: number, transactionHash?: string): Promise<string> {
+  async getAttestation(messageHash: string, sourceDomain?: number, transactionHash?: string): Promise<string | null> {
     try {
       let url;
       if (sourceDomain !== undefined && transactionHash) {

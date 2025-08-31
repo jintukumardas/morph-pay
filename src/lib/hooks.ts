@@ -17,7 +17,7 @@ export class CCTPHooksService extends CCTPService {
     recipientAddress: string,
     signer: ethers.Signer,
     hookMetadata: HookMetadata
-  ): Promise<{ txHash: string; messageHash: string; hookId: string }> {
+  ): Promise<{ txHash: string; messageHash: string; sourceDomain: number; hookId: string }> {
     // Encode hook metadata
     const encodedHooks = this.encodeHookMetadata(hookMetadata);
     

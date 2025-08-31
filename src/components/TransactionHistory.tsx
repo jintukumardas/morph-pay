@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ExternalLink, Clock, CheckCircle, AlertCircle, Zap, RefreshCw } from 'lucide-react';
 import { SUPPORTED_CHAINS, CCTPService } from '@/lib/cctp';
 import toast from 'react-hot-toast';
@@ -126,7 +126,7 @@ export function TransactionHistory() {
     }
   };
 
-  const refreshTransactions = async () => {
+  const refreshTransactions = useCallback(async () => {
     setIsRefreshing(true);
     try {
       const pendingTransactions = transactions.filter(tx => tx.status === 'PENDING');
@@ -157,7 +157,7 @@ export function TransactionHistory() {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [transactions]);
 
   useEffect(() => {
     loadTransactions();
@@ -173,7 +173,7 @@ export function TransactionHistory() {
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [transactions]);
+  }, [transactions, refreshTransactions]);
 
   const filteredTransactions = transactions.filter(tx => {
     if (filter === 'all') return true;
@@ -317,7 +317,7 @@ export function TransactionHistory() {
                 </div>
 
                 <button
-                  onClick={() => window.open(`https://etherscan.io/tx/${tx.id}`, '_blank')}
+                  onClick={() => window.open(`https://sepolia.etherscan.io/tx/${tx.id}`, '_blank')}
                   className="ml-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
                   title="View on explorer"
                 >
