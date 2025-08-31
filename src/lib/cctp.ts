@@ -247,11 +247,18 @@ export class CCTPService {
       if (options.hooks) {
         console.log('Using depositForBurnWithHook');
         // Use depositForBurnWithHook for V2 hooks
+        const destinationCaller = ethers.ZeroHash; // Empty bytes32 for standard transfers
+        const maxFee = 500; // Maximum fee
+        const minFinalityThreshold = options.useFastTransfer ? 1000 : 0; // Fast transfer threshold
+        
         tx = await tokenMessenger.depositForBurnWithHook(
           burnAmount,
           destConfig.domainId,
           ethers.zeroPadValue(recipientAddress, 32),
           sourceConfig.usdcAddress,
+          destinationCaller,
+          maxFee,
+          minFinalityThreshold,
           options.hooks,
           {
             gasLimit: options.gasLimit || 500000
@@ -469,7 +476,7 @@ export class CCTPService {
     return response.data.fee;
   }
 
-  async waitForAttestation(messageHash: string, maxWaitTime = 1800000): Promise<string> {
+  async waitForAttestation(messageHash: string, maxWaitTime = 2400000): Promise<string> {
     // Wait for Circle's attestation service to sign the message
     const startTime = Date.now();
     const checkInterval = 15000; // Check every 15 seconds (reduced API calls)

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { CCTPService, SUPPORTED_CHAINS, TransferOptions } from './cctp';
 import { CCTPHooksService, HookMetadata } from './hooks';
+import { webhookService } from './webhook';
 
 export interface CrossChainTransferResult {
   sourceTransactionHash: string;
@@ -44,14 +45,62 @@ export class CrossChainTransferService {
   ): Promise<CrossChainTransferResult> {
     const startTime = Date.now();
     const onProgress = options?.onProgress || (() => {});
+    const senderAddress = await signer.getAddress();
+
+    // Generate transfer ID for tracking
+    const transferId = ethers.keccak256(
+      ethers.solidityPacked(
+        ['string', 'string', 'string', 'uint256'],
+        [sourceChain, destinationChain, recipientAddress, Date.now()]
+      )
+    );
 
     try {
+
+      // Send webhook: Transfer initiated
+      await webhookService.sendWebhook('transfer.initiated', {
+        transfer: {
+          id: transferId,
+          sourceChain,
+          destinationChain,
+          amount,
+          recipient: recipientAddress,
+          sender: senderAddress,
+          status: 'PENDING',
+          useFastTransfer: options?.useFastTransfer || false,
+          enableHooks: options?.enableHooks || false,
+          hookId: options?.enableHooks ? 'pending' : undefined,
+        },
+        metadata: {
+          estimatedCompletionTime: Date.now() + (options?.useFastTransfer ? 900000 : 2400000),
+          progress: 0,
+        }
+      });
+
       // Step 1: Initiate burn transaction
       onProgress({
         step: 'BURNING',
         message: `Burning ${amount} USDC on ${SUPPORTED_CHAINS[sourceChain].name}...`,
         progress: 10,
         timeElapsed: Date.now() - startTime
+      });
+
+      // Send webhook: Burning started
+      await webhookService.sendWebhook('transfer.burning', {
+        transfer: {
+          id: transferId,
+          sourceChain,
+          destinationChain,
+          amount,
+          recipient: recipientAddress,
+          sender: senderAddress,
+          status: 'BURNING',
+          useFastTransfer: options?.useFastTransfer || false,
+          enableHooks: options?.enableHooks || false,
+        },
+        metadata: {
+          progress: 10,
+        }
       });
 
       let burnResult;
@@ -89,10 +138,31 @@ export class CrossChainTransferService {
         timeElapsed: Date.now() - startTime
       });
 
+      // Send webhook: Attestation pending
+      await webhookService.sendWebhook('transfer.attestation_pending', {
+        transfer: {
+          id: transferId,
+          messageHash: burnResult.messageHash,
+          sourceChain,
+          destinationChain,
+          amount,
+          recipient: recipientAddress,
+          sender: senderAddress,
+          status: 'PENDING',
+          sourceTransactionHash: burnResult.txHash,
+          useFastTransfer: options?.useFastTransfer || false,
+          enableHooks: options?.enableHooks || false,
+          hookId: 'hookId' in burnResult ? (burnResult.hookId as string) : undefined,
+        },
+        metadata: {
+          progress: 30,
+        }
+      });
+
       // Step 2: Wait for attestation
       const attestation = await this.waitForAttestationWithProgress(
         burnResult.messageHash,
-        options?.useFastTransfer ? 600000 : 1800000, // 10min for fast, 30min for standard (testnet can be slow)
+        options?.useFastTransfer ? 900000 : 2400000, // 15min for fast, 40min for standard (testnet needs more time)
         (progressPercent) => {
           onProgress({
             step: 'WAITING_ATTESTATION',
@@ -113,6 +183,28 @@ export class CrossChainTransferService {
         timeElapsed: Date.now() - startTime
       });
 
+      // Send webhook: Ready to mint
+      await webhookService.sendWebhook('transfer.ready_to_mint', {
+        transfer: {
+          id: transferId,
+          messageHash: burnResult.messageHash,
+          sourceChain,
+          destinationChain,
+          amount,
+          recipient: recipientAddress,
+          sender: senderAddress,
+          status: 'READY_TO_MINT',
+          sourceTransactionHash: burnResult.txHash,
+          useFastTransfer: options?.useFastTransfer || false,
+          enableHooks: options?.enableHooks || false,
+          hookId: 'hookId' in burnResult ? (burnResult.hookId as string) : undefined,
+        },
+        metadata: {
+          progress: 75,
+          attestation,
+        }
+      });
+
       return {
         sourceTransactionHash: burnResult.txHash,
         messageHash: burnResult.messageHash,
@@ -130,6 +222,29 @@ export class CrossChainTransferService {
         timeElapsed: Date.now() - startTime
       });
 
+      // Send webhook: Transfer failed
+      try {
+        await webhookService.sendWebhook('transfer.failed', {
+          transfer: {
+            id: transferId,
+            sourceChain,
+            destinationChain,
+            amount,
+            recipient: recipientAddress,
+            sender: senderAddress,
+            status: 'FAILED',
+            useFastTransfer: options?.useFastTransfer || false,
+            enableHooks: options?.enableHooks || false,
+          },
+          metadata: {
+            progress: 0,
+            error: error.message,
+          }
+        });
+      } catch (webhookError) {
+        console.error('Failed to send webhook for transfer failure:', webhookError);
+      }
+
       throw error;
     }
   }
@@ -145,6 +260,7 @@ export class CrossChainTransferService {
     }
 
     const startTime = Date.now();
+    const senderAddress = await signer.getAddress();
     onProgress = onProgress || (() => {});
 
     try {
@@ -153,6 +269,28 @@ export class CrossChainTransferService {
         message: `Minting USDC on ${SUPPORTED_CHAINS[destinationChain].name}...`,
         progress: 80,
         timeElapsed: Date.now() - startTime
+      });
+
+      // Send webhook: Minting started
+      await webhookService.sendWebhook('transfer.minting', {
+        transfer: {
+          id: result.sourceTransactionHash,
+          messageHash: result.messageHash,
+          sourceChain: 'unknown', // Not available in result
+          destinationChain,
+          amount: 'unknown', // Not available in result
+          recipient: 'unknown', // Not available in result
+          sender: senderAddress,
+          status: 'MINTING',
+          sourceTransactionHash: result.sourceTransactionHash,
+          useFastTransfer: false, // Not available in result
+          enableHooks: false, // Not available in result
+          hookId: result.hookId,
+        },
+        metadata: {
+          progress: 80,
+          attestation: result.attestation,
+        }
       });
 
       // Extract message bytes from the message hash for minting
@@ -172,6 +310,28 @@ export class CrossChainTransferService {
         txHash: mintTxHash,
         progress: 100,
         timeElapsed: Date.now() - startTime
+      });
+
+      // Send webhook: Transfer completed
+      await webhookService.sendWebhook('transfer.completed', {
+        transfer: {
+          id: result.sourceTransactionHash,
+          messageHash: result.messageHash,
+          sourceChain: 'unknown', // Not available in result
+          destinationChain,
+          amount: 'unknown', // Not available in result
+          recipient: 'unknown', // Not available in result
+          sender: senderAddress,
+          status: 'COMPLETED',
+          sourceTransactionHash: result.sourceTransactionHash,
+          destinationTransactionHash: mintTxHash,
+          useFastTransfer: false, // Not available in result
+          enableHooks: false, // Not available in result
+          hookId: result.hookId,
+        },
+        metadata: {
+          progress: 100,
+        }
       });
 
       return {
@@ -281,18 +441,24 @@ export class CrossChainTransferService {
     const startTime = Date.now();
     const checkInterval = 10000; // Check every 10 seconds (reduced API calls)
     
+    let attemptCount = 0;
     while (Date.now() - startTime < maxWaitTime) {
       try {
+        attemptCount++;
+        const elapsed = Date.now() - startTime;
+        console.log(`Attestation check attempt ${attemptCount}, elapsed: ${Math.round(elapsed / 1000)}s`);
+        
         const attestation = await this.cctp.getAttestation(messageHash, sourceDomain, transactionHash);
         if (attestation) {
-          console.log('Attestation retrieved successfully:', attestation);
+          console.log(`✅ Attestation retrieved successfully after ${attemptCount} attempts (${Math.round(elapsed / 1000)}s)`);
+          console.log('Attestation:', attestation.substring(0, 20) + '...');
           onProgress(100);
           return attestation;
         } else {
-          console.log('Attestation not ready yet, continuing to wait...');
+          console.log(`⏳ Attestation not ready yet (attempt ${attemptCount}/${Math.ceil(maxWaitTime / 10000)}), continuing to wait...`);
         }
-      } catch (error) {
-        console.log('Attestation API error, continuing to wait...', error);
+      } catch (error: any) {
+        console.log(`⚠️ Attestation API error (attempt ${attemptCount}), continuing to wait...`, error.message);
         // Attestation not ready yet, continue waiting
       }
       
@@ -304,7 +470,8 @@ export class CrossChainTransferService {
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
     
-    throw new Error('Attestation timed out - message may not be finalized yet');
+    const finalElapsed = Math.round((Date.now() - startTime) / 1000);
+    throw new Error(`Attestation timed out after ${finalElapsed}s (${attemptCount} attempts). Testnet attestations can take longer - message may still be processing.`);
   }
 
   private async getMessageBytes(messageHash: string): Promise<string> {
@@ -328,9 +495,9 @@ export class CrossChainTransferService {
     const destConfig = SUPPORTED_CHAINS[destinationChain];
 
     if (useFastTransfer && sourceConfig.supportsFastTransfer && destConfig.supportsFastTransfer) {
-      return { min: 30, max: 600 }; // 30 seconds to 10 minutes (testnet can be slower)
+      return { min: 60, max: 900 }; // 1 to 15 minutes (testnet optimized)
     } else {
-      return { min: 5, max: 30 }; // 5 to 30 minutes (standard attestation)
+      return { min: 600, max: 2400 }; // 10 to 40 minutes (standard attestation on testnet)
     }
   }
 

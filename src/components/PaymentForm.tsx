@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { CCTPHooksService, HookMetadata } from '@/lib/hooks';
 import { CCTPService, SUPPORTED_CHAINS, TransferOptions } from '@/lib/cctp';
 import { CrossChainTransferService, TransferProgress } from '@/lib/cross-chain-transfer';
+import { webhookService } from '@/lib/webhook';
 import { ArrowRight, Loader2, Zap, Settings, AlertCircle, CheckCircle, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -119,6 +120,9 @@ export function PaymentForm() {
   };
 
   useEffect(() => {
+    // Initialize webhooks on component mount
+    webhookService.loadWebhooks();
+    
     if (address) {
       checkBalanceAndAllowance();
       checkTransferFees();
@@ -163,10 +167,14 @@ export function PaymentForm() {
       const signer = await provider.getSigner();
       const crossChainService = new CrossChainTransferService();
 
+      // Only enable smart contract hooks for non-notification hook types
+      // Webhook notifications are handled as events, not smart contract hooks
+      const shouldUseSmartHooks = formData.enableHooks && formData.hookType !== 'NOTIFICATION';
+      
       const transferOptions = {
         useFastTransfer: formData.useFastTransfer,
-        enableHooks: formData.enableHooks,
-        hookMetadata: formData.enableHooks ? {
+        enableHooks: shouldUseSmartHooks,
+        hookMetadata: shouldUseSmartHooks ? {
           hookType: formData.hookType,
           executionTiming: 'POST_MINT' as const,
           gasLimit: 500000,
@@ -210,7 +218,7 @@ export function PaymentForm() {
         timestamp: Date.now(),
         status: result.status === 'ATTESTED' ? 'READY_TO_MINT' : 'PENDING',
         useFastTransfer: formData.useFastTransfer,
-        enableHooks: formData.enableHooks,
+        enableHooks: shouldUseSmartHooks,
         hookId: result.hookId,
       };
 
@@ -431,7 +439,7 @@ export function PaymentForm() {
           />
           <label htmlFor="fastTransfer" className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Zap className="w-4 h-4 text-yellow-500" />
-            Use Fast Transfer (30 sec - 10 min)
+            Use Fast Transfer (1-15 minutes)
           </label>
         </div>
 
@@ -509,7 +517,7 @@ export function PaymentForm() {
           <div className="flex items-center justify-between text-sm mt-2">
             <span className="text-gray-600">Estimated Time:</span>
             <span className="font-medium text-green-600">
-              {formData.useFastTransfer ? '30 sec - 10 min' : '5-30 minutes'}
+              {formData.useFastTransfer ? '1-15 minutes' : '10-40 minutes'}
             </span>
           </div>
           {parseFloat(transferFees) > 0 && (

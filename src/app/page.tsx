@@ -6,13 +6,14 @@ import { useAccount } from 'wagmi';
 import { PaymentForm } from '@/components/PaymentForm';
 import { TransactionHistory } from '@/components/TransactionHistory';
 import { HooksManager } from '@/components/HooksManager';
+import { WebhookConfig } from '@/components/WebhookConfig';
 import { ArrowRightLeft, Zap, Shield, Globe, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import config, { validateConfig } from '@/lib/config';
 
 export default function Home() {
   const { isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'hooks'>('send');
+  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'hooks' | 'webhooks'>('send');
   const configValidation = validateConfig();
 
   return (
@@ -125,10 +126,11 @@ export default function Home() {
               { id: 'send', label: 'Send Payment', icon: ArrowRightLeft },
               { id: 'history', label: 'History', icon: null },
               { id: 'hooks', label: 'Hooks Manager', icon: null },
+              { id: 'webhooks', label: 'Webhooks', icon: Globe },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as 'send' | 'history' | 'hooks')}
+                onClick={() => setActiveTab(id as 'send' | 'history' | 'hooks' | 'webhooks')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                   activeTab === id
                     ? 'bg-blue-600 text-white shadow-lg'
@@ -147,6 +149,7 @@ export default function Home() {
               {activeTab === 'send' && <PaymentForm />}
               {activeTab === 'history' && <TransactionHistory />}
               {activeTab === 'hooks' && <HooksManager />}
+              {activeTab === 'webhooks' && <WebhookConfig />}
             </div>
             
             {/* Sidebar */}

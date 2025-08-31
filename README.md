@@ -9,20 +9,22 @@ MorphPay is a cutting-edge multichain USDC payment system that leverages Circle'
 ## 🌟 Key Features
 
 ### ⚡ Lightning Fast Transfers
-- **8-20 second transfers** using CCTP V2 Fast Transfer technology
+- **30 sec - 10 min transfers** using CCTP V2 Fast Transfer technology (testnet optimized)
 - Support for both Standard and Fast Transfer methods
 - Real-time transaction tracking and status updates
+- Extended timeout handling for reliable testnet operations
 
 ### 🌐 Multichain Native
 - **5 Supported Chains**: Ethereum Sepolia, Arbitrum Sepolia, Base Sepolia, Avalanche Fuji, Sonic Testnet
 - Seamless cross-chain USDC transfers without bridges
 - Native burn-and-mint mechanism for maximum security
 
-### 🎣 Smart Hooks
+### 🎣 Smart Hooks & Webhooks
 - **Automated Rebalancing**: Automatically move funds to preferred chains
-- **Webhook Notifications**: Real-time payment notifications for merchants
+- **Real-time Webhooks**: 7 different event types with secure HMAC-SHA256 signatures
 - **Auto Token Swaps**: Convert USDC to other tokens post-transfer
 - **Custom Business Logic**: Execute custom smart contract functions
+- **Merchant Integration**: Complete webhook system for external system integration
 
 ### 📊 Live Blockchain Data
 - **Real-time Chain Statistics**: Live volume, transaction counts, gas prices
@@ -238,12 +240,150 @@ Navigate to the Hooks Manager to set up:
 - **Token Swaps**: Auto-convert USDC to other tokens
 - **Custom Logic**: Deploy custom smart contract hooks
 
-### 5. Monitor Transactions
+### 5. Configure Webhooks (New!)
+Set up real-time notifications for transfer events:
+- **Event Selection**: Choose which transfer events to monitor
+- **Secure Delivery**: HMAC-SHA256 signature verification
+- **Real-time Updates**: Get notified instantly about transfer status changes
+- **Custom Logic**: Build integrations with your existing systems
+
+### 6. Monitor Transactions
 View real-time transaction history with:
 - Live status updates
 - Hook execution logs
 - Chain statistics
 - Transfer performance metrics
+
+## 🔔 Webhook System
+
+MorphPay features a comprehensive webhook system that sends real-time notifications about transfer events, perfect for merchants and developers who need to integrate with external systems.
+
+### Supported Webhook Events
+
+| Event | Description | Timing |
+|-------|-------------|--------|
+| `transfer.initiated` | Transfer has been started | When user initiates transfer |
+| `transfer.burning` | USDC is being burned on source chain | During burn transaction |
+| `transfer.attestation_pending` | Waiting for Circle attestation | After burn, before attestation |
+| `transfer.ready_to_mint` | Attestation received, ready to mint | When attestation is available |
+| `transfer.minting` | USDC is being minted on destination chain | During mint transaction |
+| `transfer.completed` | Transfer completed successfully | When transfer is finalized |
+| `transfer.failed` | Transfer encountered an error | If transfer fails at any stage |
+
+### Webhook Payload Structure
+
+```json
+{
+  "event": "transfer.completed",
+  "timestamp": 1703123456789,
+  "transfer": {
+    "id": "0x123...",
+    "messageHash": "0xabc...",
+    "sourceChain": "ethereum",
+    "destinationChain": "avalanche", 
+    "amount": "100.00",
+    "recipient": "0x742d35cc...",
+    "sender": "0x456...",
+    "status": "COMPLETED",
+    "sourceTransactionHash": "0xdef...",
+    "destinationTransactionHash": "0xghi...",
+    "useFastTransfer": false,
+    "enableHooks": false,
+    "hookId": "0x789..." // if hooks enabled
+  },
+  "metadata": {
+    "progress": 100,
+    "estimatedCompletionTime": 1703123456789,
+    "attestation": "0xattestationdata...", // when available
+    "error": "Error message" // if failed
+  }
+}
+```
+
+### Security Features
+
+- **HMAC-SHA256 Signatures**: All webhooks include a signature header for verification
+- **Timestamp Headers**: Prevent replay attacks with timestamp validation
+- **Configurable Secrets**: Each webhook endpoint can have its own secret key
+- **Timeout Protection**: 10-second timeout prevents hanging requests
+
+### Setting Up Webhooks
+
+1. **Navigate to Webhooks Tab**: Click the "Webhooks" tab in the MorphPay interface
+2. **Add Webhook URL**: Enter your endpoint URL (https://yourserver.com/webhook)
+3. **Set Secret (Optional)**: Add a secret key for signature verification
+4. **Select Events**: Choose which transfer events you want to receive
+5. **Test Webhook**: Use the built-in test feature to verify your endpoint
+
+### Example Webhook Server
+
+```javascript
+const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+// Verify webhook signature
+function verifySignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedSignature, 'hex'),
+    Buffer.from(signature.replace('sha256=', ''), 'hex')
+  );
+}
+
+app.post('/webhook', (req, res) => {
+  const signature = req.headers['x-webhook-signature-256'];
+  const event = req.headers['x-webhook-event'];
+  const rawBody = JSON.stringify(req.body);
+  
+  // Verify signature
+  if (!verifySignature(rawBody, signature, 'your-secret-key')) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  const { transfer, metadata } = req.body;
+  
+  // Handle different event types
+  switch (event) {
+    case 'transfer.completed':
+      console.log(`✅ Transfer ${transfer.id} completed!`);
+      // Update your database, send notifications, etc.
+      break;
+    case 'transfer.failed':
+      console.log(`❌ Transfer ${transfer.id} failed: ${metadata.error}`);
+      // Handle error, maybe retry or notify user
+      break;
+    // Handle other events...
+  }
+  
+  res.json({ success: true });
+});
+
+app.listen(3001);
+```
+
+### Testing Your Webhook
+
+MorphPay includes a webhook test server (`webhook-example.js`) that you can use to test your integration:
+
+1. **Start the test server**:
+   ```bash
+   node webhook-example.js
+   ```
+
+2. **Expose with ngrok** (for testing):
+   ```bash
+   npm install -g ngrok
+   ngrok http 3001
+   ```
+
+3. **Configure in MorphPay**: Use the ngrok URL in your webhook settings
 
 ## 🔧 Technical Implementation
 
