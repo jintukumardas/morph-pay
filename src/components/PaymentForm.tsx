@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
 import { CCTPHooksService, HookMetadata } from '@/lib/hooks';
 import { CCTPService, SUPPORTED_CHAINS, TransferOptions } from '@/lib/cctp';
+import { CrossChainTransferService, TransferProgress } from '@/lib/cross-chain-transfer';
 import { ArrowRight, Loader2, Zap, Settings, AlertCircle, CheckCircle, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -29,6 +30,8 @@ export function PaymentForm() {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [transferFees, setTransferFees] = useState<string>('0');
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [transferProgress, setTransferProgress] = useState<TransferProgress | null>(null);
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   // Check USDC balance and allowance
   const checkBalanceAndAllowance = async () => {
@@ -151,67 +154,57 @@ export function PaymentForm() {
     if (!networkSwitched) return;
 
     setIsLoading(true);
-    const loadingToast = toast.loading('Processing payment...');
+    setShowProgressModal(true);
+    toast.dismiss(); // Clear existing toasts
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
+      const crossChainService = new CrossChainTransferService();
 
-      let result;
-      if (formData.enableHooks) {
-        const hooksService = new CCTPHooksService();
-        const hookMetadata: HookMetadata = {
+      const transferOptions = {
+        useFastTransfer: formData.useFastTransfer,
+        enableHooks: formData.enableHooks,
+        hookMetadata: formData.enableHooks ? {
           hookType: formData.hookType,
-          executionTiming: 'POST_MINT',
+          executionTiming: 'POST_MINT' as const,
           gasLimit: 500000,
-        };
+        } : undefined,
+        onProgress: (progress: TransferProgress) => {
+          setTransferProgress(progress);
+        }
+      };
 
-        result = await hooksService.initiateBurnWithHooks(
-          formData.sourceChain,
-          formData.destinationChain,
-          formData.amount,
-          formData.recipient,
-          signer,
-          hookMetadata
-        );
+      const result = await crossChainService.initiateTransfer(
+        formData.sourceChain,
+        formData.destinationChain,
+        formData.amount,
+        formData.recipient,
+        signer,
+        transferOptions
+      );
 
-        toast.success(`Payment sent with hooks! Hook ID: ${result.hookId.slice(0, 10)}...`);
-      } else {
-        const cctpService = new CCTPService();
-        const options: TransferOptions = {
-          useFastTransfer: formData.useFastTransfer,
-          gasLimit: 300000
-        };
-
-        result = await cctpService.initiateBurn(
-          formData.sourceChain,
-          formData.destinationChain,
-          formData.amount,
-          formData.recipient,
-          signer,
-          options
-        );
-
+      if (result.status === 'ATTESTED') {
         if (formData.useFastTransfer) {
-          toast.success('Fast payment sent! Should arrive in 8-20 seconds');
+          toast.success('Fast payment initiated! Attestation received in seconds');
         } else {
-          toast.success('Payment sent! Will arrive in 10-20 minutes');
+          toast.success('Payment initiated! Attestation received');
         }
       }
 
       // Store transaction for history
       const transaction = {
-        id: result.txHash,
+        id: result.sourceTransactionHash,
         messageHash: result.messageHash,
         sourceChain: formData.sourceChain,
         destinationChain: formData.destinationChain,
         amount: formData.amount,
         recipient: formData.recipient,
         timestamp: Date.now(),
-        status: 'PENDING',
+        status: result.status === 'ATTESTED' ? 'READY_TO_MINT' : 'PENDING',
         useFastTransfer: formData.useFastTransfer,
         enableHooks: formData.enableHooks,
-        hookId: 'hookId' in result ? result.hookId : undefined,
+        hookId: result.hookId,
       };
 
       const existingTxs = JSON.parse(localStorage.getItem('morphpay-transactions') || '[]');
@@ -227,11 +220,15 @@ export function PaymentForm() {
       // Refresh balance
       setTimeout(() => checkBalanceAndAllowance(), 3000);
 
-      toast.dismiss(loadingToast);
     } catch (error: any) {
       console.error('Payment failed:', error);
-      toast.dismiss(loadingToast);
       toast.error(error.message || 'Payment failed');
+      setTransferProgress({
+        step: 'FAILED',
+        message: error.message || 'Payment failed',
+        progress: 0,
+        timeElapsed: 0
+      });
     } finally {
       setIsLoading(false);
     }
@@ -504,6 +501,88 @@ export function PaymentForm() {
           )}
         </button>
       </form>
+
+      {/* Progress Modal */}
+      {showProgressModal && transferProgress && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Cross-Chain Transfer Progress
+              </h3>
+              
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                <div 
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${transferProgress.progress}%` }}
+                ></div>
+              </div>
+              
+              {/* Progress Status */}
+              <div className="mb-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  {transferProgress.step === 'COMPLETED' ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : transferProgress.step === 'FAILED' ? (
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  )}
+                  <span className="font-medium text-gray-900">
+                    {transferProgress.step.replace('_', ' ')}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{transferProgress.message}</p>
+                <p className="text-xs text-gray-500">
+                  Progress: {Math.round(transferProgress.progress)}%
+                  {transferProgress.timeElapsed > 0 && (
+                    <> • Time: {Math.round(transferProgress.timeElapsed / 1000)}s</>
+                  )}
+                </p>
+              </div>
+
+              {/* Transaction Hash */}
+              {transferProgress.txHash && (
+                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-600 mb-1">Transaction Hash:</p>
+                  <p className="font-mono text-xs text-blue-600 break-all">
+                    {transferProgress.txHash}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                {(transferProgress.step === 'COMPLETED' || transferProgress.step === 'FAILED') && (
+                  <button
+                    onClick={() => {
+                      setShowProgressModal(false);
+                      setTransferProgress(null);
+                    }}
+                    className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Close
+                  </button>
+                )}
+                {transferProgress.step === 'READY_TO_MINT' && (
+                  <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                    Complete Transfer
+                  </button>
+                )}
+                {transferProgress.step !== 'COMPLETED' && transferProgress.step !== 'FAILED' && (
+                  <button
+                    onClick={() => setShowProgressModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Hide Progress
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { PaymentForm } from '@/components/PaymentForm';
 import { TransactionHistory } from '@/components/TransactionHistory';
-import { ChainStats } from '@/components/ChainStats';
 import { HooksManager } from '@/components/HooksManager';
 import { ArrowRightLeft, Zap, Shield, Globe, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
@@ -13,7 +12,7 @@ import config, { validateConfig } from '@/lib/config';
 
 export default function Home() {
   const { isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'hooks' | 'stats'>('send');
+  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'hooks'>('send');
   const configValidation = validateConfig();
 
   return (
@@ -54,7 +53,7 @@ export default function Home() {
                     CONFIG
                   </div>
                 )}
-                {config.environment === 'development' && (
+                {typeof window !== 'undefined' && config.environment === 'development' && (
                   <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                     DEV
                   </div>
@@ -126,11 +125,10 @@ export default function Home() {
               { id: 'send', label: 'Send Payment', icon: ArrowRightLeft },
               { id: 'history', label: 'History', icon: null },
               { id: 'hooks', label: 'Hooks Manager', icon: null },
-              { id: 'stats', label: 'Chain Stats', icon: null },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as 'send' | 'history' | 'hooks' | 'stats')}
+                onClick={() => setActiveTab(id as 'send' | 'history' | 'hooks')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                   activeTab === id
                     ? 'bg-blue-600 text-white shadow-lg'
@@ -149,7 +147,6 @@ export default function Home() {
               {activeTab === 'send' && <PaymentForm />}
               {activeTab === 'history' && <TransactionHistory />}
               {activeTab === 'hooks' && <HooksManager />}
-              {activeTab === 'stats' && <ChainStats />}
             </div>
             
             {/* Sidebar */}

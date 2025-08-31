@@ -19,65 +19,65 @@ export interface ChainConfig {
 
 export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
   ethereum: {
-    id: 1,
-    name: 'Ethereum',
+    id: config.cctpEnvironment === 'testnet' ? 11155111 : 1, // Sepolia : Mainnet
+    name: config.cctpEnvironment === 'testnet' ? 'Ethereum Sepolia' : 'Ethereum',
     rpcUrl: config.rpcUrls.ethereum,
     domainId: 0,
-    tokenMessengerAddress: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
-    messageTransmitterAddress: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
-    tokenMinterAddress: '0xfd78EE919681417d192449715b2594ab58f5D002',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0xBd3fa81B58Ba92a82136038B25aDec7066af3155',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0x7865fAfC2db2093669d92c0F33AeEF291086BEFD' : '0x0a992d191DEeC32aFe36203Ad87D7d289a738F81',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xE997d7d2F6E065a9A93Fa2175E878Fb9081F1f0A' : '0xc4922d64a24675E16e1586e3e3Aa56C06fABe907',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' : '0xA0b86a33E75A9DB55553dAe29b73E98e82c0c6b5',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
     supportsFastTransfer: config.features.enableFastTransfer,
   },
   arbitrum: {
-    id: 42161,
-    name: 'Arbitrum',
+    id: config.cctpEnvironment === 'testnet' ? 421614 : 42161, // Arbitrum Sepolia : Arbitrum One
+    name: config.cctpEnvironment === 'testnet' ? 'Arbitrum Sepolia' : 'Arbitrum',
     rpcUrl: config.rpcUrls.arbitrum,
     domainId: 3,
-    tokenMessengerAddress: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
-    messageTransmitterAddress: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
-    tokenMinterAddress: '0xfd78EE919681417d192449715b2594ab58f5D002',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x19330d10D9Cc8751218eaf51E8885D058642E08A',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xaCF1ceeF35caAc005e15888dDb8A3515C41B4872' : '0xC30362313FBBA5cf9163F0bb16a0e01f01A896ca',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xE997d7d2F6E065a9A93Fa2175E878Fb9081F1f0A' : '0xE7Ed1fa7f45D05C508232aa32649D89b73b8bA48',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' : '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
     supportsFastTransfer: config.features.enableFastTransfer,
   },
   base: {
-    id: 8453,
-    name: 'Base',
+    id: config.cctpEnvironment === 'testnet' ? 84532 : 8453, // Base Sepolia : Base
+    name: config.cctpEnvironment === 'testnet' ? 'Base Sepolia' : 'Base',
     rpcUrl: config.rpcUrls.base,
     domainId: 6,
-    tokenMessengerAddress: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
-    messageTransmitterAddress: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
-    tokenMinterAddress: '0xfd78EE919681417d192449715b2594ab58f5D002',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x1682Ae6375C4E4A97e4B583BC394c861A46D8962',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0x7865fAfC2db2093669d92c0F33AeEF291086BEFD' : '0xAD09780d193884d503182aD4588450C416D6F9D4',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xE997d7d2F6E065a9A93Fa2175E878Fb9081F1f0A' : '0xc4922d64a24675E16e1586e3e3Aa56C06fABe907',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x036CbD53842c5426634e7929541eC2318f3dCF7e' : '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
     supportsFastTransfer: config.features.enableFastTransfer,
   },
   avalanche: {
-    id: 43114,
-    name: 'Avalanche',
+    id: config.cctpEnvironment === 'testnet' ? 43113 : 43114, // Avalanche Fuji : Avalanche
+    name: config.cctpEnvironment === 'testnet' ? 'Avalanche Fuji' : 'Avalanche',
     rpcUrl: config.rpcUrls.avalanche,
     domainId: 1,
-    tokenMessengerAddress: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
-    messageTransmitterAddress: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
-    tokenMinterAddress: '0xfd78EE919681417d192449715b2594ab58f5D002',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x6B25532e1060CE10cc3B0A99e5683b91BFDe6982',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0xa9fb1b3009dcb79e2fe346c16a604b8fa8ae0a79' : '0x8186359aF5F57FbB40c6b14A588d2A59C0C29880',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0x4ed8867f9947a5fe140c9dc1c6f207f3489f501e' : '0x420f5035fd5dc62a167e7e7f08b604335ae272b8',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x5425890298aed601595a70AB815c96711a31Bc65' : '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
     supportsFastTransfer: config.features.enableFastTransfer,
   },
   sonic: {
-    id: 146,
-    name: 'Sonic',
+    id: config.cctpEnvironment === 'testnet' ? 64165 : 146, // Sonic Testnet : Sonic
+    name: config.cctpEnvironment === 'testnet' ? 'Sonic Testnet' : 'Sonic',
     rpcUrl: config.rpcUrls.sonic,
     domainId: 4,
-    tokenMessengerAddress: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
-    messageTransmitterAddress: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
-    tokenMinterAddress: '0xfd78EE919681417d192449715b2594ab58f5D002',
+    tokenMessengerAddress: config.cctpEnvironment === 'testnet' ? '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' : '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+    messageTransmitterAddress: config.cctpEnvironment === 'testnet' ? '0x7865fAfC2db2093669d92c0F33AeEF291086BEFD' : '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+    tokenMinterAddress: config.cctpEnvironment === 'testnet' ? '0xE997d7d2F6E065a9A93Fa2175E878Fb9081F1f0A' : '0xfd78EE919681417d192449715b2594ab58f5D002',
     usdcAddress: config.cctpEnvironment === 'testnet' ? '0x5425890298aed601595a70AB815c96711a31Bc65' : '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
     supportsSourceTransfer: true,
     supportsDestinationTransfer: true,
@@ -109,30 +109,68 @@ export class CCTPService {
     const config = SUPPORTED_CHAINS[chainKey];
     if (!config) throw new Error('Unsupported chain');
 
-    const provider = new ethers.JsonRpcProvider(config.rpcUrl);
-    const usdcContract = new ethers.Contract(
-      config.usdcAddress,
-      USDC_ABI,
-      provider
-    );
+    try {
+      const provider = new ethers.JsonRpcProvider(config.rpcUrl);
+      const usdcContract = new ethers.Contract(
+        config.usdcAddress,
+        USDC_ABI,
+        provider
+      );
 
-    const balance = await usdcContract.balanceOf(address);
-    return ethers.formatUnits(balance, 6);
+      // Check if contract exists first
+      const code = await provider.getCode(config.usdcAddress);
+      if (code === '0x') {
+        console.warn(`USDC contract not found at ${config.usdcAddress} for ${chainKey}`);
+        return '0';
+      }
+
+      const balance = await usdcContract.balanceOf(address);
+      
+      // Handle case where balance call returns empty data
+      if (!balance) {
+        return '0';
+      }
+      
+      return ethers.formatUnits(balance, 6);
+    } catch (error: any) {
+      console.warn(`Failed to check USDC balance for ${chainKey}:`, error.message || error);
+      // Return 0 balance if contract call fails (might be wrong address or network)
+      return '0';
+    }
   }
 
   async checkUSDCAllowance(owner: string, chainKey: string): Promise<string> {
     const config = SUPPORTED_CHAINS[chainKey];
     if (!config) throw new Error('Unsupported chain');
 
-    const provider = new ethers.JsonRpcProvider(config.rpcUrl);
-    const usdcContract = new ethers.Contract(
-      config.usdcAddress,
-      USDC_ABI,
-      provider
-    );
+    try {
+      const provider = new ethers.JsonRpcProvider(config.rpcUrl);
+      const usdcContract = new ethers.Contract(
+        config.usdcAddress,
+        USDC_ABI,
+        provider
+      );
 
-    const allowance = await usdcContract.allowance(owner, config.tokenMessengerAddress);
-    return ethers.formatUnits(allowance, 6);
+      // Check if contract exists first
+      const code = await provider.getCode(config.usdcAddress);
+      if (code === '0x') {
+        console.warn(`USDC contract not found at ${config.usdcAddress} for ${chainKey}`);
+        return '0';
+      }
+
+      const allowance = await usdcContract.allowance(owner, config.tokenMessengerAddress);
+      
+      // Handle case where allowance call returns empty data
+      if (!allowance) {
+        return '0';
+      }
+      
+      return ethers.formatUnits(allowance, 6);
+    } catch (error: any) {
+      console.warn(`Failed to check USDC allowance for ${chainKey}:`, error.message || error);
+      // Return 0 allowance if contract call fails
+      return '0';
+    }
   }
 
   async approveUSDC(amount: string, chainKey: string, signer: ethers.Signer): Promise<string> {
@@ -246,7 +284,7 @@ export class CCTPService {
   async getAttestation(messageHash: string): Promise<string> {
     try {
       const response = await axios.get(
-        `${this.apiBaseUrl}/v1/attestations/${messageHash}`
+        `${this.apiBaseUrl}/v2/messages/${messageHash}`
       );
       return response.data.attestation;
     } catch (error) {
@@ -314,6 +352,38 @@ export class CCTPService {
     );
 
     return response.data.fee;
+  }
+
+  async waitForAttestation(messageHash: string, maxWaitTime = 1800000): Promise<string> {
+    // Wait for Circle's attestation service to sign the message
+    const startTime = Date.now();
+    const checkInterval = 10000; // Check every 10 seconds
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      try {
+        const attestation = await this.getAttestation(messageHash);
+        if (attestation) {
+          return attestation;
+        }
+      } catch (error) {
+        // Attestation not ready yet, continue waiting
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+    
+    throw new Error('Attestation timed out - message may not be finalized yet');
+  }
+
+  async getMessageStatus(messageHash: string): Promise<{ status: string; attestation?: string }> {
+    try {
+      const response = await axios.get(
+        `${this.apiBaseUrl}/v2/messages/${messageHash}/status`
+      );
+      return response.data;
+    } catch (error) {
+      return { status: 'PENDING' };
+    }
   }
 
   private extractMessageHashFromReceipt(receipt: any): string {

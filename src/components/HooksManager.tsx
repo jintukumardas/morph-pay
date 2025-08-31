@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MerchantHookConfig } from '@/lib/hooks';
-import { Settings, Webhook, ArrowRightLeft, Repeat, Zap, Save } from 'lucide-react';
+import { MerchantHookConfig, HookMetadata } from '@/lib/hooks';
+import { Settings, Webhook, ArrowRightLeft, Repeat, Zap, Save, Play } from 'lucide-react';
+import { HooksDemoModal } from './HooksDemoModal';
 import toast from 'react-hot-toast';
 
 export function HooksManager() {
   const [configs, setConfigs] = useState<MerchantHookConfig[]>([]);
   const [activeTab, setActiveTab] = useState<'existing' | 'create'>('existing');
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const [newConfig, setNewConfig] = useState<Partial<MerchantHookConfig>>({
     merchantId: '',
     webhookUrl: '',
@@ -55,6 +57,20 @@ export function HooksManager() {
     localStorage.setItem('morphpay-hooks', JSON.stringify([...stored, config]));
   };
 
+  const handleExecuteDemo = async (hookType: HookMetadata['hookType']) => {
+    // Simulate hook execution for demo
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const demoResults = {
+      REBALANCE: 'Auto rebalance executed: 100 USDC moved from Base to Ethereum',
+      NOTIFICATION: 'Webhook notification sent to merchant endpoint successfully',
+      SWAP: 'Auto swap executed: 100 USDC → 100 USDT on Base',
+      CUSTOM: 'Custom hook contract executed with business logic'
+    };
+    
+    toast.success(demoResults[hookType]);
+  };
+
   const hookTypes = [
     {
       id: 'webhook',
@@ -96,9 +112,18 @@ export function HooksManager() {
           </p>
         </div>
         
-        <div className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-2 rounded-lg">
-          <Zap className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-medium text-purple-800">CCTP V2 Hooks</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowDemoModal(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+          >
+            <Play className="w-4 h-4" />
+            Live Demo
+          </button>
+          <div className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-2 rounded-lg">
+            <Zap className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-800">CCTP V2 Hooks</span>
+          </div>
         </div>
       </div>
 
@@ -292,6 +317,13 @@ export function HooksManager() {
           </div>
         </div>
       )}
+
+      {/* Demo Modal */}
+      <HooksDemoModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        onExecuteDemo={handleExecuteDemo}
+      />
     </div>
   );
 }

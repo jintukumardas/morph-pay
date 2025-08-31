@@ -29,7 +29,9 @@ export interface AppConfig {
 const getEnvVar = (key: string, defaultValue?: string): string => {
   const value = process.env[key];
   if (!value && !defaultValue) {
-    console.warn(`Environment variable ${key} is not set`);
+    if (key !== 'NEXT_PUBLIC_ANALYTICS_ID' && key !== 'NEXT_PUBLIC_SENTRY_DSN' && key !== 'NEXT_PUBLIC_CIRCLE_API_KEY') {
+      console.warn(`Environment variable ${key} is not set`);
+    }
     return '';
   }
   return value || defaultValue || '';
@@ -48,7 +50,7 @@ const getArrayEnvVar = (key: string, defaultValue: string[] = []): number[] => {
 
 export const config: AppConfig = {
   environment: (process.env.NODE_ENV as AppConfig['environment']) || 'development',
-  walletConnectProjectId: getEnvVar('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', 'demo-project-id'),
+  walletConnectProjectId: getEnvVar('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', '49dc316aaabcb2da454c399bf59fc1dd'),
   cctpEnvironment: (getEnvVar('NEXT_PUBLIC_CCTP_ENVIRONMENT', 'testnet') as AppConfig['cctpEnvironment']),
   circleApiKey: getEnvVar('NEXT_PUBLIC_CIRCLE_API_KEY'),
   supportedChains: getArrayEnvVar('NEXT_PUBLIC_SUPPORTED_CHAINS', ['1', '42161', '8453', '43114', '146']),
@@ -86,6 +88,16 @@ export const validateConfig = (): { isValid: boolean; errors: string[] } => {
     if (!config.circleApiKey) {
       errors.push('Circle API key is required for production');
     }
+  }
+
+  // Validate Circle API key format for testnet
+  if (config.cctpEnvironment === 'testnet' && config.circleApiKey) {
+    if (!config.circleApiKey.startsWith('TEST_API_KEY:') && !config.circleApiKey.startsWith('TESTNET_API_KEY:')) {
+      console.warn('Testnet Circle API key should start with TEST_API_KEY: or TESTNET_API_KEY:');
+    }
+  }
+
+  if (config.environment === 'production') {
 
     if (config.cctpEnvironment !== 'mainnet') {
       errors.push('Production environment should use mainnet CCTP');
