@@ -431,7 +431,7 @@ export function PaymentForm() {
           />
           <label htmlFor="fastTransfer" className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Zap className="w-4 h-4 text-yellow-500" />
-            Use Fast Transfer (8-20 seconds)
+            Use Fast Transfer (30 sec - 10 min)
           </label>
         </div>
 
@@ -509,7 +509,7 @@ export function PaymentForm() {
           <div className="flex items-center justify-between text-sm mt-2">
             <span className="text-gray-600">Estimated Time:</span>
             <span className="font-medium text-green-600">
-              {formData.useFastTransfer ? '8-20 seconds' : '10-20 minutes'}
+              {formData.useFastTransfer ? '30 sec - 10 min' : '5-30 minutes'}
             </span>
           </div>
           {parseFloat(transferFees) > 0 && (

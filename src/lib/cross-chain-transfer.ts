@@ -92,7 +92,7 @@ export class CrossChainTransferService {
       // Step 2: Wait for attestation
       const attestation = await this.waitForAttestationWithProgress(
         burnResult.messageHash,
-        options?.useFastTransfer ? 60000 : 1800000, // 1min for fast, 30min for standard (testnet is slower)
+        options?.useFastTransfer ? 600000 : 1800000, // 10min for fast, 30min for standard (testnet can be slow)
         (progressPercent) => {
           onProgress({
             step: 'WAITING_ATTESTATION',
@@ -279,7 +279,7 @@ export class CrossChainTransferService {
     transactionHash?: string
   ): Promise<string> {
     const startTime = Date.now();
-    const checkInterval = 5000; // Check every 5 seconds
+    const checkInterval = 10000; // Check every 10 seconds (reduced API calls)
     
     while (Date.now() - startTime < maxWaitTime) {
       try {
@@ -328,9 +328,9 @@ export class CrossChainTransferService {
     const destConfig = SUPPORTED_CHAINS[destinationChain];
 
     if (useFastTransfer && sourceConfig.supportsFastTransfer && destConfig.supportsFastTransfer) {
-      return { min: 8, max: 20 }; // seconds
+      return { min: 30, max: 600 }; // 30 seconds to 10 minutes (testnet can be slower)
     } else {
-      return { min: 10, max: 20 }; // minutes
+      return { min: 5, max: 30 }; // 5 to 30 minutes (standard attestation)
     }
   }
 

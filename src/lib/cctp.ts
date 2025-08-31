@@ -472,7 +472,7 @@ export class CCTPService {
   async waitForAttestation(messageHash: string, maxWaitTime = 1800000): Promise<string> {
     // Wait for Circle's attestation service to sign the message
     const startTime = Date.now();
-    const checkInterval = 10000; // Check every 10 seconds
+    const checkInterval = 15000; // Check every 15 seconds (reduced API calls)
     
     while (Date.now() - startTime < maxWaitTime) {
       try {
